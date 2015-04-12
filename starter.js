@@ -1,16 +1,13 @@
 var request = require('superagent');
 var Rx = require('rx');
 
-var clientId = process.argv[2];
-if (!clientId) {
-  console.error('Run with Instagram client_id:\nnpm start -- <client_id>\n');
-  process.exit(0);
-}
+//Hardcode
+var clientId = 'a85622eade3a4986b6474847851871c8';
 
 var participant = 'anonymous';
 var interval = 5; // seconds
 var postEndpoint = 'http://rxdisplay.neueda.lv/in';
-var instagramTag = 'ничоси';
+var instagramTag = encodeURIComponent('Riga');
 
 
 // Step 0: Helper to create Observable instances from HTTP requests
@@ -27,35 +24,41 @@ Rx.Observable.fromRequest = function(req) {
   });
 };
 
-
 // Step 1: Fetch from Instagram by tag
 var apiRoot = 'https://api.instagram.com/v1/';
 var fromInstagramByTag = function(tag) {
-  var encodedTag = encodeURIComponent(instagramTag);
-  var url = ???;
-  return Rx.Observable.???(request.get(url));
+  if (!arguments[0]) {
+    throw new Error('Please provide a tag!');
+  }
+
+  var url = apiRoot + 'tags/' + tag + '/media/recent?client_id=' + clientId + '&count=10';
+  return Rx.Observable.fromRequest(request.get(url));
 };
 
-
 // Step 2: Fetch with an interval and flatten
-var ticker = Rx.Observable.???;
+var ticker = Rx.Observable.interval(interval * 1000).timeInterval();
 var rawPics = ticker.flatMap(function() {
-  return fromInstagramByTag(instagramTag).???(function(res) {
+  return fromInstagramByTag(instagramTag).flatMap(function(res) {
     return res.body.data;
   });
 });
 
-
 // Step 3: Filter and restructure data, then send to UI
-var uniquePics = rawPics.???(function (pic) {
-  return ???;
+var uniquePics = rawPics.distinct(function (pic) {
+    return pic.id;
+}).filter(function (x) {
+    return x.location != null;
 });
-var pics = uniquePics.???(function(pic) {
+
+var pics = uniquePics.map(function(pic) {
   return {
     tag: instagramTag,
-    ???
+    url: pic.images.thumbnail.url,
+    location: pic.images.location,
+    participant: "DB"
   };
 });
+
 pics.subscribe(function(pic) {
   var req = request.post(postEndpoint).send(pic);
   Rx.Observable.fromRequest(req)
@@ -68,4 +71,4 @@ pics.subscribe(function(pic) {
         console.log(err.code);
       }
     });
-});
+});*/
