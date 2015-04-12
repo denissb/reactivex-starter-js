@@ -1,8 +1,11 @@
 var request = require('superagent');
 var Rx = require('rx');
 
-//Hardcode
-var clientId = 'a85622eade3a4986b6474847851871c8';
+var clientId = process.argv[2];
+if (!clientId) {
+  console.error('Run with Instagram client_id:\nnpm start -- <client_id>\n');
+  process.exit(0);
+}  
 
 var participant = 'anonymous';
 var interval = 5; // seconds
@@ -71,4 +74,4 @@ pics.subscribe(function(pic) {
         console.log(err.code);
       }
     });
-});*/
+});
